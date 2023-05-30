@@ -1,4 +1,5 @@
 ﻿using MetaComponent.Models;
+using MetaComponent.Solvers.Algorithms;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -57,6 +58,23 @@ namespace MetaComponent.Solvers
             this.results = new List<OptimizationResult>();
         }
 
+        // Report progress for updating UI
+        public void ReportProgressFromBackground(OptimizationResult result)
+        {
+            results.Add(result);
+            // Update UI
+            backgroundWorker.ReportProgress(100, results);
+        }
+
+        // Get objective value
+        public double GetObjectiveValueFromGrasshopper(double[] positions)
+        {
+            // Update Slider
+            actions.UpdateGrasshopperSlider(positions.Select(pos => Convert.ToDecimal(pos)).ToList());
+
+            return actions.GetGrasshopperObjectiveValue();
+        }
+
         // This heavy calculation must be run in background
         public void Solve()
         {
@@ -70,48 +88,41 @@ namespace MetaComponent.Solvers
             // Get Positions
             var variables = component.grasshopperInput.Variables;
 
-            for(var iter  = 0; iter < maxIteration; iter++)
+            // Create Lower bound and Upper bound
+            var lb = new List<double>();
+            var ub = new List<double>();
+            for (var i = 0; i < variables.Count(); i++)
             {
-                if(backgroundWorker.IsBusy) { 
-                // Check for cancelation in background thread from user
-                    if (backgroundWorker.CancellationPending)
-                    {
-                        doWork.Cancel = true;
-                        return;
-                    }
-                    else {
-                        Positions = new List<decimal>();
-                        // Generate Random Variables
-                        for (var i = 0; i < variables.Count(); i++)
-                        {
-                            // Get lowerbound and upperbound
-                            var lb = Convert.ToDouble(variables[i].LowerB);
-                            var ub = Convert.ToDouble(variables[i].UpperB);
-
-                            // Random a new position in a dimension
-                            var newPos = random.NextDouble() * (ub - lb) + lb;
-
-                            // Convert to decimal
-                            Positions.Add(Convert.ToDecimal(newPos));
-                        }
-
-                        // Update Grasshopper Slider
-                        actions.UpdateGrasshopperSlider(Positions);
-
-                        // And Get the objective
-                        Fitness = actions.GetGrasshopperObjectiveValue();
-                        Thread.Sleep(1500);
-
-                        results.Add(new OptimizationResult(
-                            positions: Positions,
-                            fitness: Fitness
-                        ));
-
-                        // Update UI
-                        backgroundWorker.ReportProgress(100, results);
-                    }
-                }
+                // Get lowerbound and upperbound
+                lb.Add(Convert.ToDouble(variables[i].LowerB));
+                ub.Add(Convert.ToDouble(variables[i].UpperB));
             }
+
+            // Create AVOA Algorithm
+            var avoa = new AVOA(
+                lb.ToArray(), 
+                ub.ToArray(), 
+                population, 
+                maxIteration, 
+                GetObjectiveValueFromGrasshopper,
+                ReportProgressFromBackground);
+
+            avoa.Solve();
+
+
+            //if(backgroundWorker.IsBusy) { 
+            //// Check for cancelation in background thread from user
+            //    if (backgroundWorker.CancellationPending)
+            //    {
+            //        doWork.Cancel = true;
+            //        return;
+            //    }
+            //    else {
+                    
+            //        // Do working
+                    
+            //    }
+            //}
         }
     }
 }
