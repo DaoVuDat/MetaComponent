@@ -98,31 +98,28 @@ namespace MetaComponent.Solvers
                 ub.Add(Convert.ToDouble(variables[i].UpperB));
             }
 
-            // Create AVOA Algorithm
-            var avoa = new AVOA(
-                lb.ToArray(), 
-                ub.ToArray(), 
-                population, 
-                maxIteration, 
-                GetObjectiveValueFromGrasshopper,
-                ReportProgressFromBackground);
+            if(algorithm == "AVOA")
+            {
+                // Create AVOA Algorithm
+                var avoa = new AVOA(
+                    lb.ToArray(),
+                    ub.ToArray(),
+                    population,
+                    maxIteration,
+                    GetObjectiveValueFromGrasshopper,
+                    ReportProgressFromBackground,
+                    backgroundWorker,
+                    doWork);
 
-            avoa.Solve();
+                avoa.Solve();
+            } else if (algorithm == "GWO")
+            {
+
+            }
+            
 
 
-            //if(backgroundWorker.IsBusy) { 
-            //// Check for cancelation in background thread from user
-            //    if (backgroundWorker.CancellationPending)
-            //    {
-            //        doWork.Cancel = true;
-            //        return;
-            //    }
-            //    else {
-                    
-            //        // Do working
-                    
-            //    }
-            //}
+            
         }
     }
 }
