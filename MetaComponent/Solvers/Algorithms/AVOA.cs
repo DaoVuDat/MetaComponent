@@ -32,6 +32,7 @@ namespace MetaComponent.Solvers.Algorithms
         private BackgroundWorker backgroundWorker;
         private DoWorkEventArgs doWork;
 
+        private Dictionary<string, string> topResults;
         private Random rnd;
         #endregion
 
@@ -62,6 +63,7 @@ namespace MetaComponent.Solvers.Algorithms
             this.updateUI = updateUI;
             this.backgroundWorker = backgroundWorker;
             this.doWork = doWork;
+            this.topResults = new Dictionary<string, string>();
         }
         #endregion
 
@@ -137,6 +139,16 @@ namespace MetaComponent.Solvers.Algorithms
                             // Calculate fitness
                             double fitness = objectiveFunction(vurture.Position);
                             vurture.Fitness = fitness;
+
+                            // Add to dictionary
+                            if(!topResults.ContainsKey(Math.Round(fitness, 3).ToString()))
+                            {
+                                topResults.Add(
+                                    Math.Round(fitness, 3).ToString(), 
+                                    string.Join(";", vurture.Position.Select(x => Math.Round(x, 3)))
+                                    );
+                            }
+                            
 
                             // Find alpha, beta, delta wolve
                             if (fitness <= bestVurture1.Fitness)
@@ -286,8 +298,7 @@ namespace MetaComponent.Solvers.Algorithms
                         updateUI(new OptimizationResult(
                             fitness: (double)bestVurture1.Fitness,
                             positions: bestVurture1.Position.Select(pos => Convert.ToDecimal(pos)).ToList()
-                            )
-                        );
+                            ));
                         #endregion
 
                         #region Get optimal solution and fitness of that one
@@ -310,10 +321,21 @@ namespace MetaComponent.Solvers.Algorithms
             }
             #endregion
 
+
+            #region Convert Vurture to Optimization Result to save Top design
+            // Add The best to list
+            StringBuilder topDesigns = new StringBuilder();
+            foreach (var design in topResults)
+            {
+                topDesigns.AppendLine(design.Value + "," + design.Key);
+            }
+            #endregion
+
             #region Export result into file
             try
             {
-                File.WriteAllText(@".\results_avoa.csv", storeBestResults.ToString());
+                File.WriteAllText(@".\results_avoa_iteration.csv", storeBestResults.ToString());
+                File.WriteAllText(@".\results_avoa_top_design.csv", topDesigns.ToString());
             }
             catch (Exception ex)
             {

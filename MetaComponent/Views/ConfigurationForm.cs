@@ -29,18 +29,6 @@ namespace MetaComponent.Views
             results = new List<OptimizationResult>();
 
             InitializeBackgroundWorker();
-
-            InitialChart();
-        }
-
-        // Setup Chart
-        private void InitialChart()
-        {
-            var objChart = chart.ChartAreas[0];
-            objChart.AxisX.Title = "Iteration";
-
-            objChart.AxisY.Title = "Objective Value";
-            chart.Series.Clear();
         }
 
 
@@ -169,26 +157,6 @@ namespace MetaComponent.Views
             lbIteration.Update();
             lbFitness.Invalidate();
             lbFitness.Update();
-
-            // Series is a line
-            chart.Series.Clear();
-            var series = new Series
-            {
-                Name = "best",
-                Color = Color.Pink,
-                IsVisibleInLegend = false,
-                IsXValueIndexed = true,
-                ChartType = SeriesChartType.Area,
-            };
-            
-            chart.Series.Add(series);
-
-            for (var i = 0; i < results.Count; i++)
-            {
-                series.Points.AddXY(i+1, results[i].Fitness);
-            }
-            
-            chart.Invalidate();
         }
 
         public void SetupButtonStartState()
