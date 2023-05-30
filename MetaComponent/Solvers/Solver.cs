@@ -1,7 +1,10 @@
-﻿using System;
+﻿using MetaComponent.Models;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -13,10 +16,6 @@ namespace MetaComponent.Solvers
         double GetGrasshopperObjectiveValue();
     }
 
-    public interface UIActions
-    {
-        void UpdateUI(string positionString, string fitnessString);
-    }
 
     public class Solver
     {
@@ -26,17 +25,25 @@ namespace MetaComponent.Solvers
         private MetaComponent component;
 
         private GrasshopperActions actions;
-        private UIActions uIActions;
+
+        private BackgroundWorker backgroundWorker;
+        private DoWorkEventArgs doWork;
 
         public List<decimal> Positions { get; set; }
-        public List<double> PositionsDouble { get; set; }
-        public string PositionsString { get; set; }
         public double Fitness { get; set; }
-        public string FitnessString { get; set; }
+
+        public List<OptimizationResult> results;
 
         private Random random;
 
-        public Solver(int maxIteration, int population, string algorithm, MetaComponent component, GrasshopperActions actions, UIActions uIActions)
+        public Solver(
+            int maxIteration, 
+            int population, 
+            string algorithm, 
+            MetaComponent component, 
+            GrasshopperActions actions, 
+            BackgroundWorker backgroundWorker,
+            DoWorkEventArgs doWork)
         {
             this.maxIteration = maxIteration;
             this.population = population;
@@ -44,11 +51,13 @@ namespace MetaComponent.Solvers
             this.component = component;
             this.random = new Random();
             this.actions = actions;
-            this.uIActions = uIActions;
             this.Positions = new List<decimal>();
-            this.PositionsDouble = new List<double>();
+            this.backgroundWorker = backgroundWorker;
+            this.doWork = doWork;
+            this.results = new List<OptimizationResult>();
         }
 
+        // This heavy calculation must be run in background
         public void Solve()
         {
             //Setup Variables => return value of Variables
@@ -60,41 +69,49 @@ namespace MetaComponent.Solvers
             }
             // Get Positions
             var variables = component.grasshopperInput.Variables;
-            var fitness = component.grasshopperInput.GetObjectiveValue();
 
-            // Generate Random Variables
-            for (var i = 0; i < variables.Count(); i++)
+            for(var iter  = 0; iter < maxIteration; iter++)
             {
-                // Get lowerbound and upperbound
-                var lb = Convert.ToDouble(variables[i].LowerB);
-                var ub = Convert.ToDouble(variables[i].UpperB);
+                if(backgroundWorker.IsBusy) { 
+                // Check for cancelation in background thread from user
+                    if (backgroundWorker.CancellationPending)
+                    {
+                        doWork.Cancel = true;
+                        return;
+                    }
+                    else {
+                        Positions = new List<decimal>();
+                        // Generate Random Variables
+                        for (var i = 0; i < variables.Count(); i++)
+                        {
+                            // Get lowerbound and upperbound
+                            var lb = Convert.ToDouble(variables[i].LowerB);
+                            var ub = Convert.ToDouble(variables[i].UpperB);
 
-                // Random a new position in a dimension
-                var newPos = random.NextDouble() * (ub - lb) + lb;
+                            // Random a new position in a dimension
+                            var newPos = random.NextDouble() * (ub - lb) + lb;
 
+                            // Convert to decimal
+                            Positions.Add(Convert.ToDecimal(newPos));
+                        }
 
-                PositionsDouble.Add(newPos); // Test
+                        // Update Grasshopper Slider
+                        actions.UpdateGrasshopperSlider(Positions);
 
-                // Convert to decimal
-                Positions.Add(Convert.ToDecimal(newPos));
+                        // And Get the objective
+                        Fitness = actions.GetGrasshopperObjectiveValue();
+                        Thread.Sleep(1500);
+
+                        results.Add(new OptimizationResult(
+                            positions: Positions,
+                            fitness: Fitness
+                        ));
+
+                        // Update UI
+                        backgroundWorker.ReportProgress(100, results);
+                    }
+                }
             }
-
-            // Update Grasshopper Slider
-            actions.UpdateGrasshopperSlider(Positions);
-
-            // And Get the objective
-            fitness = actions.GetGrasshopperObjectiveValue();
-
-            // Write value
-            PositionsString = "New Pos: ";
-            foreach (var pos in PositionsDouble)
-            {
-                PositionsString += Math.Round(pos, 3) + ", ";
-            }
-
-            FitnessString = fitness.ToString() + " - I = " + maxIteration + " - P = " + population + " - A = " + algorithm;
-            
-            uIActions.UpdateUI(PositionsString, FitnessString);
         }
     }
 }

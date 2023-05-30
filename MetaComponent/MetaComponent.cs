@@ -151,6 +151,7 @@ namespace MetaComponent
 
             _doc = Component.OnPingDocument();
             _inputGuids = new List<Guid>();
+            _outputs = new List<IGH_Param>();
         }
 
         public bool SetInputs()

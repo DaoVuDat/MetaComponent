@@ -28,16 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this._backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.cbAlgorithms = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.lbIteration = new System.Windows.Forms.Label();
             this.lbFitness = new System.Windows.Forms.Label();
+            this.lbIteration = new System.Windows.Forms.Label();
             this.numberMaxIter = new System.Windows.Forms.NumericUpDown();
             this.numberPop = new System.Windows.Forms.NumericUpDown();
             this.btnStart = new System.Windows.Forms.Button();
+            this.btnStop = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numberMaxIter)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numberPop)).BeginInit();
@@ -92,15 +94,6 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Result";
             // 
-            // lbIteration
-            // 
-            this.lbIteration.AutoSize = true;
-            this.lbIteration.Location = new System.Drawing.Point(7, 23);
-            this.lbIteration.Name = "lbIteration";
-            this.lbIteration.Size = new System.Drawing.Size(51, 13);
-            this.lbIteration.TabIndex = 0;
-            this.lbIteration.Text = "Iteration: ";
-            // 
             // lbFitness
             // 
             this.lbFitness.AutoSize = true;
@@ -109,6 +102,15 @@
             this.lbFitness.Size = new System.Drawing.Size(43, 13);
             this.lbFitness.TabIndex = 1;
             this.lbFitness.Text = "Fitness:";
+            // 
+            // lbIteration
+            // 
+            this.lbIteration.AutoSize = true;
+            this.lbIteration.Location = new System.Drawing.Point(7, 23);
+            this.lbIteration.Name = "lbIteration";
+            this.lbIteration.Size = new System.Drawing.Size(51, 13);
+            this.lbIteration.TabIndex = 0;
+            this.lbIteration.Text = "Iteration: ";
             // 
             // numberMaxIter
             // 
@@ -164,11 +166,23 @@
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
+            // btnStop
+            // 
+            this.btnStop.Enabled = false;
+            this.btnStop.Location = new System.Drawing.Point(207, 121);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(75, 23);
+            this.btnStop.TabIndex = 8;
+            this.btnStop.Text = "Stop";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
+            // 
             // ConfigurationForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(384, 159);
+            this.Controls.Add(this.btnStop);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.numberPop);
             this.Controls.Add(this.numberMaxIter);
@@ -200,5 +214,6 @@
         private System.Windows.Forms.NumericUpDown numberMaxIter;
         private System.Windows.Forms.NumericUpDown numberPop;
         private System.Windows.Forms.Button btnStart;
+        private System.Windows.Forms.Button btnStop;
     }
 }
